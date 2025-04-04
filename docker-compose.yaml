@@ -2,7 +2,11 @@ services:
   bot:
     build:
       dockerfile: Dockerfile
-  neo4j:
+    secrets:
+      - discord_token
+    environment:
+      DISCORD_TOKEN_FILE: /run/secrets/discord_token
+  graph_database:
     image: neo4j:latest
     environment:
       - NEO4J_AUTH=none
@@ -14,8 +18,21 @@ services:
     ports:
       - "7474:7474"
       - "7687:7687"
+    secrets:
+      - neo4j_auth_file
+  relational_database:
+    image: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+          - ./postgres/db-data/:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=postgres
 secrets:
   neo4j_auth_file:
     file: secrets/neo4j_auth.txt
-
+  discord_token:
+    file: secrets/discord_token.txt
 

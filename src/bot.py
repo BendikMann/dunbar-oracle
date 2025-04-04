@@ -1,13 +1,16 @@
 import os
 
 import discord
-from discord import app_commands
+from discord import app_commands, Guild
 from discord.abc import Snowflake
 from discord.app_commands import command, commands
 from dotenv import load_dotenv
 
 import neo4j_connect
 import logging
+
+from discord_views import DoYouKnow
+
 intents = discord.Intents.default()
 intents.members = True
 
@@ -23,9 +26,14 @@ The user they are claimed to know is then sent a message asking, 'Do you know __
 If so, 
 '''
 
+class known_role(Snowflake):
+    id = 1353215817227173960
 
 class MY_GUILD(Snowflake):
     id = 386361143511351296
+
+class center_user(Snowflake):
+    id = 121801869281460228
 
 class DunbarClient(discord.Client):
     def __init__(self, *, intents: discord.Intents):
@@ -79,7 +87,23 @@ async def iknow(interaction: discord.Interaction, member: discord.Member):
 
 
     await interaction.response.send_message(f'{member} marked as known by you.', ephemeral=True)
+    # Ask the knowee if they know the requester, establishing friendship.
+    await dm_confirm_knowership(requester_snowflake, knowee_snowflake,interaction.guild)
 
+
+async def dm_confirm_knowership(requester_snowflake, target_snowflake, guild: Guild):
+    # We assume that the users already exist, because they would be created by the iknow command
+    # additionally we fetch them by guild so that we can apply the needed role.
+    requester = await guild.fetch_member(requester_snowflake)
+    target = await guild.fetch_member(target_snowflake)
+
+    role_instance = guild.get_role(known_role.id)
+    center_instance = guild.get_member(center_user.id)
+
+    await target.send(content=f"Do you know {requester.display_name}?", view=DoYouKnow(requester, target, role_instance, center_instance))
+
+
+    pass
 
 @client.event
 async def on_ready():
