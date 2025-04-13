@@ -1,11 +1,9 @@
 CREATE TABLE Centers
 (
-    UserSnowflake   INT,
-    GuildSnowflake  INT PRIMARY KEY,
-    RoleSnowflake   INT,
+    UserSnowflake   BIGINT,
+    GuildSnowflake  BIGINT,
+    RoleSnowflake   BIGINT,
     Radius          INT DEFAULT 3,
-    CreationTime    TIMESTAMP default CURRENT_TIMESTAMP
+    CreationTime    TIMESTAMP default CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_and_guild PRIMARY KEY (UserSnowflake, GuildSnowflake)
 );
-
-ALTER TABLE Centers
-ADD CONSTRAINT unique_user_and_guild UNIQUE (UserSnowflake, GuildSnowflake);

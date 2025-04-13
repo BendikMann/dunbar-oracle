@@ -10,8 +10,6 @@ if __name__ == '__main__':
     # It may be provided
     load_dotenv()
 
-
-
     logging.getLogger().addHandler(logging.StreamHandler())
 
     discord_token = os.getenv('DISCORD_TOKEN')

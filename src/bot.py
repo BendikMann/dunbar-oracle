@@ -4,11 +4,13 @@ import discord
 from discord import app_commands, Guild
 from discord.abc import Snowflake
 from discord.app_commands import command, commands
+from discord.ext.commands import has_guild_permissions
 from dotenv import load_dotenv
 
 import neo4j_connect
 import logging
 
+import postgres_connect
 from discord_views import DoYouKnow
 
 intents = discord.Intents.default()
@@ -89,6 +91,28 @@ async def iknow(interaction: discord.Interaction, member: discord.Member):
     await interaction.response.send_message(f'{member} marked as known by you.', ephemeral=True)
     # Ask the knowee if they know the requester, establishing friendship.
     await dm_confirm_knowership(requester_snowflake, knowee_snowflake,interaction.guild)
+
+@client.tree.command(
+    name='add_center',
+    description='Add a user to be the center node for the role to be applied'
+)
+@discord.app_commands.describe(member="Member to be the center")
+@discord.app_commands.describe(role="Role to be applied to members who have friendship with N steps of the member.")
+@has_guild_permissions(administrator=True) # Without this malicious users could execute this command to include themselves, thus bypassing this check.
+async def add_center(interaction: discord.Interaction, member: discord.Member, role: discord.Role):
+    guild_manager = postgres_connect.GuildManager()
+    if guild_manager.get_specific_center(interaction.guild.id, member.id):
+        # The entry exists, we just need to modify it
+        guild_manager.change_guild_role(interaction.guild.id, member.id, role.id)
+        await interaction.response.send_message(f'Role for friendship with member is now {role.name}', ephemeral=True)
+    else:
+        guild_manager.create_guild_relationship(interaction.guild.id, member.id, role.id)
+        await interaction.response.send_message(f'A new center ({member.name}) for this guild has been added with {role.name}', ephemeral=True)
+
+async def get_current_centers(interaction: discord.Interaction):
+    guild_manager = postgres_connect.GuildManager()
+    guild = guild_manager.get_related_centers(interaction.guild.id)
+
 
 
 async def dm_confirm_knowership(requester_snowflake, target_snowflake, guild: Guild):
