@@ -89,4 +89,17 @@ class MyTestCase(unittest.TestCase):
         role = related[0][1]
         self.assertEqual(new_role_snowflake, role)
 
+    def test_get_centers(self):
+        guild_snowflake = random.randint(0, 1_000_000_000_000)
+        center_snowflake = random.randint(0, 1_000_000_000_000)
+        role_snowflake = random.randint(0, 1_000_000_000_000)
+
+        self.database.create_guild_relationship(guild_snowflake, center_snowflake, role_snowflake)
+
+        centers = self.database.get_center(center_snowflake)
+
+        self.assertTrue(centers)
+
+
+
 
